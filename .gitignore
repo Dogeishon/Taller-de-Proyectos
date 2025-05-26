@@ -1,0 +1,10 @@
+# .gitignore
+node_modules/
+.env
+dist/
+build/
+.DS_Store
+*.log
+*.dll
+*.so
+*.exe
