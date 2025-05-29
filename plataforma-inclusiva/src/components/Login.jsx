@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
+import { auth, db } from '../firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate, Link } from 'react-router-dom';
 
 function Login() {
@@ -12,10 +13,30 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+
     try {
-      await signInWithEmailAndPassword(auth, correo, password);
-      navigate('/estilo'); // redirigir a test de estilo
+      // 1. Iniciar sesión
+      const credenciales = await signInWithEmailAndPassword(auth, correo, password);
+      const user = credenciales.user;
+
+      // 2. Consultar Firestore
+      const userRef = doc(db, 'usuarios', user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const datos = userSnap.data();
+
+        // 3. Redirigir según si ya hizo el test
+        if (datos.estiloTestCompletado === false || datos.estiloTestCompletado === undefined) {
+          navigate('/estilo');
+        } else {
+          navigate('/chatbot');
+        }
+      } else {
+        setError('No se encontraron los datos del usuario en Firestore');
+      }
     } catch (err) {
+      console.error(err);
       setError('Correo o contraseña incorrectos');
     }
   };

@@ -1,10 +1,28 @@
-# .gitignore
-node_modules/
-.env
+# ─── Node / Frontend / Backend ────────────────────────────────────
+**/node_modules/
 dist/
-build/
+.cache/
+
+# ─── Entorno y secretos ───────────────────────────────────────────
+.env
+.env.*
+credentials.yml
+*.json                    # si son claves sensibles
+!/plataforma-inclusiva/src/firebaseConfig.js  # EXCEPCIÓN si no guarda secretos
+
+# ─── Python / Rasa ───────────────────────────────────────────────
+.venv/
+.rasa/
+__pycache__/
+*.py[cod]
+
+# ─── Datos generados / Modelos ──────────────────────────────────
+**/dataset.csv
+**/dataset_combined.csv
+**/modelo_basico.h5
+**/*.keras
+
+# ─── IDE / SO ────────────────────────────────────────────────────
+.vscode/
 .DS_Store
 *.log
-*.dll
-*.so
-*.exe
