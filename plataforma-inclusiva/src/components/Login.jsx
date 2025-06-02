@@ -1,70 +1,107 @@
-import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
-import { useNavigate, Link } from 'react-router-dom';
+// src/components/Login.jsx
+import { useState } from "react";
+import { signInWithEmailAndPassword, getAuth } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../firebaseConfig";
+import { doc, getDoc, increment, updateDoc, getFirestore } from "firebase/firestore";
+import { useNavigate, Link } from "react-router-dom";
+import AuthCard from "./AuthCard";               // ⬅️ contenedor visual
 
-function Login() {
-  const [correo, setCorreo] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+export default function Login() {
+  const [correo,    setCorreo]    = useState("");
+  const [password,  setPassword]  = useState("");
+  const [error,     setError]     = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  /* ------- lógica Firebase (sin cambios) ------- */
+  async function handleLogin(e) {
     e.preventDefault();
-    setError('');
+    setError("");
 
     try {
-      // 1. Iniciar sesión
-      const credenciales = await signInWithEmailAndPassword(auth, correo, password);
-      const user = credenciales.user;
+      const { user } = await signInWithEmailAndPassword(auth, correo, password)
+      const uid = user.uid
 
-      // 2. Consultar Firestore
-      const userRef = doc(db, 'usuarios', user.uid);
-      const userSnap = await getDoc(userRef);
+      const userRef = doc(db, 'usuarios', uid)
+      await updateDoc(userRef, {
+        num_logins: increment(1)
+      })
 
-      if (userSnap.exists()) {
-        const datos = userSnap.data();
+      const snap = await getDoc(doc(db, "usuarios", user.uid));
+      if (!snap.exists()) throw new Error("Usuario sin documento");
 
-        // 3. Redirigir según si ya hizo el test
-        if (datos.estiloTestCompletado === false || datos.estiloTestCompletado === undefined) {
-          navigate('/estilo');
-        } else {
-          navigate('/chatbot');
-        }
+      const datos = snap.data();
+      if (!datos.estiloTestCompletado) {
+        navigate("/estilo");
       } else {
-        setError('No se encontraron los datos del usuario en Firestore');
+        navigate("/chatbot");
       }
     } catch (err) {
       console.error(err);
-      setError('Correo o contraseña incorrectos');
+      setError("Correo o contraseña incorrectos");
     }
-  };
+  }
 
+  /* ------------- UI estilizada ----------------- */
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '1rem' }}>
-      <h2>Iniciar Sesión</h2>
-      <form onSubmit={handleLogin}>
+    <AuthCard
+      title="Iniciar sesión"
+      onSubmit={handleLogin}          /* AuthCard ya incluye <form> */
+      footer={
+        <p className="text-sm text-center text-gray-600">
+          ¿No tienes cuenta?{" "}
+          <Link to="/registro" className="text-brand-600 hover:underline">
+            Regístrate
+          </Link>
+        </p>
+      }
+    >
+      {/* Campo correo */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Correo
+        </label>
         <input
           type="email"
-          placeholder="Correo"
           value={correo}
           onChange={(e) => setCorreo(e.target.value)}
           required
-        /><br /><br />
+          className="mt-1 w-full rounded-lg border-gray-300 px-3 py-2
+                     focus:ring-brand-500 focus:border-brand-500"
+        />
+      </div>
+
+      {/* Campo contraseña */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Contraseña
+        </label>
         <input
           type="password"
-          placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-        /><br /><br />
-        <button type="submit">Ingresar</button>
-      </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <p>¿No tienes cuenta? <Link to="/registro">Regístrate</Link></p>
-    </div>
+          className="mt-1 w-full rounded-lg border-gray-300 px-3 py-2
+                     focus:ring-brand-500 focus:border-brand-500"
+        />
+      </div>
+
+      {/* Mensaje de error */}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+
+      {/* Botón */}
+      <button
+  type="submit"
+  className="
+    w-full py-2 rounded-lg 
+    bg-madera text-crema font-semibold 
+    hover:bg-madera/90 
+    focus:outline-none focus:ring-2 focus:ring-madera
+    shadow-md
+  "
+>
+        Ingresar
+      </button>
+    </AuthCard>
   );
 }
-
-export default Login;

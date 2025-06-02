@@ -1,0 +1,43 @@
+version: "3.1"
+
+intents:
+  - saludo
+  - despedida
+  - pedir_contenido
+
+entities:
+  - tema
+
+slots:
+  tema:
+    type: text
+    influence_conversation: false
+    mappings:                # ⬅️ OBLIGATORIO
+      - type: from_entity
+        entity: tema         # el mismo nombre de la entidad
+
+responses:
+  utter_saludo:
+    - text: "¡Hola! ¿En qué puedo ayudarte hoy?"
+
+  utter_mostrar_contenido:
+    - condition:
+        - type: slot
+          name: tema
+          value: algebra
+      text: "Aquí tienes ejercicios interactivos de Álgebra: https://t.ly/algebra"
+    - text: "Aquí tienes recursos de {tema}."
+
+  utter_despedida:
+    - text: "¡Hasta luego! Mucho éxito en tu estudio."
+
+actions:
+  - action_recomendar_contenido
+
+
+
+
+
+session_config:
+  session_expiration_time: 60   # minutos
+  carry_over_slots_to_new_session: true

@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
-const serviceAccount = require("./taller-de-proyectos-fa7ee-firebase-adminsdk-fbsvc-b4703c356d.json");
+const serviceAccount = require("../actions/firebase-key.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)

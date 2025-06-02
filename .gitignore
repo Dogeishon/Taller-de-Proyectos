@@ -26,3 +26,30 @@ __pycache__/
 .vscode/
 .DS_Store
 *.log
+
+# Node.js
+node_modules/
+.env
+*.env
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Firebase & claves
+*.json
+firebase-key.json
+
+# VS Code
+.vscode/
+
+# Datos y notebooks
+*.ipynb
+data/
+.ipynb_checkpoints/
+
+# Otros
+.DS_Store
+
