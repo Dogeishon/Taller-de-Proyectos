@@ -5,11 +5,22 @@ import { addDoc, collection, serverTimestamp, doc, getDoc, updateDoc, increment 
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebaseConfig";          // ← ajusta si tu ruta es distinta
 import VoiceInput from "./VoiceInput";           // ← ajusta si está en otra carpeta
+import { motion } from "framer-motion";
+import {
+  PaperAirplaneIcon,
+  MicrophoneIcon,
+  PlusIcon
+} from "@heroicons/react/24/solid";
+import CardGlass from "../components/CardGlass";
 import { useNavigate } from "react-router-dom";
 
 const neon = "#39FF14";
 const topics = ["algebra","matrices","probabilidad" /* …otros temas… */];
 const CONTENT_THRESHOLD = 5;
+const bubble = {
+  hidden: { opacity: 0, y: 8 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.23 } },
+};
 
 
 export default function Chatbot() {
@@ -124,78 +135,114 @@ export default function Chatbot() {
 
   /* ---------------- render ------------------------ */
   return (
-     <section className="w-full max-w-xl mx-auto flex flex-col gap-4">
-      {/* historial */}
-      <div className="h-[60vh] overflow-y-auto space-y-3 p-4
-                bg-crema/90 backdrop-blur-sm rounded-xl shadow-inner">
-  {messages.map((m,i)=>(  
-  <div  
-    key={i}  
-    className={clsx(  
-      "max-w-xs px-4 py-2 rounded-lg text-sm",
-      "max-w-xs px-4 py-2 rounded-lg text-sm break-words",  
-      m.role==="user"  
-        ? "ml-auto bg-botella text-crema"  
-        : "bg-grisazo text-crema"  
-    )}  
-  >  
-  <Linkify
-      componentDecorator={(decoratedHref, decoratedText, key) => (
-        <a
-          key={key}
-          href={decoratedHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            color: neon,
-            textDecoration: 'underline',
-          }}
-        >
-          {decoratedText}
-        </a>
-      )}
-    >
-      {m.text}
-    </Linkify>
-  </div>  
-))}
-</div>
+  <div className="flex justify-center">
+    <CardGlass className="w-full max-w-lg h-[80vh] flex flex-col">
 
-      {/* entrada texto */}
-      <div className="flex gap-2">
+      {/* CABECERA -------------------------------------------------- */}
+      <header className="flex items-center gap-3 pb-3 border-b border-white/30">
+        <img
+          src="/bot-avatar.png"           /* cambia a tu avatar */
+          alt="Bot"
+          className="h-10 w-10 rounded-full border-2 border-white/70"
+        />
+        <h2 className="font-semibold text-lg text-madera">Chat Inclusivo</h2>
+      </header>
+
+      {/* MENSAJES -------------------------------------------------- */}
+      <section
+        className="flex-1 overflow-y-auto space-y-4 py-4 pr-1
+                   scrollbar-thin scrollbar-thumb-madera/40"
+      >
+        {messages.map((m, i) => (
+          <motion.div
+            key={i}
+            variants={bubble}
+            initial="hidden"
+            animate="show"
+            className={clsx(
+              "max-w-[75%] px-4 py-2 rounded-2xl shadow break-words",
+              m.role === "user"
+                ? "ml-auto bg-botella text-crema"
+                : "mr-auto bg-crema/90 text-madera"
+            )}
+          >
+            <Linkify
+              componentDecorator={(href, text, key) => (
+                <a
+                  key={key}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: neon, textDecoration: "underline" }}
+                >
+                  {text}
+                </a>
+              )}
+            >
+              {m.text}
+            </Linkify>
+          </motion.div>
+        ))}
+        {/* ref para scroll al final */}
+        <div ref={bottomRef} />
+      </section>
+
+      {/* INPUT ----------------------------------------------------- */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); handleTextSend(); }}
+        className="pt-3 flex items-center gap-2 border-t border-white/30"
+      >
+        <button type="button" className="icon-btn">
+          <MicrophoneIcon className="h-6 w-6" />
+        </button>
+        <button type="button" className="icon-btn">
+          <PlusIcon className="h-6 w-6" />
+        </button>
+
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleTextSend()}
           placeholder="Escribe…"
-          className="flex-1 rounded-lg border-gray-300 px-3 py-2 focus:ring-brand-500 focus:border-brand-500"
+          className="flex-1 px-3 py-2 rounded-lg border border-white/40
+                     bg-white/25 backdrop-blur placeholder:text-madera/60
+                     focus:outline-none focus:ring-2 focus:ring-madera"
         />
-        <button
-          onClick={handleTextSend}
-          className="px-4 rounded-lg bg-brand-500 text-white hover:bg-brand-600"
+
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          className="icon-btn bg-acento text-white"
         >
-          Enviar
-        </button>
-      </div>
+          <PaperAirplaneIcon className="h-6 w-6 rotate-90" />
+        </motion.button>
+      </form>
 
-      {/* entrada voz */}
-      {style !== "visual" && <VoiceInput onSubmit={handleVoiceSend} />}
+      {/* VOZ + ACCESOS EXTERNOS ------------------------------------ */}
+      {style !== "visual" && (
+        <div className="pt-3">
+          <VoiceInput onSubmit={handleVoiceSend} />
+        </div>
+      )}
 
-      <div className="mt-4 text-center">
+      <div className="pt-4 flex flex-col md:flex-row gap-2 justify-center">
         <button
-          onClick={() => navigate("/upload-pdf")}
-          className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+          onClick={() => navigate('/upload-pdf')}
+          className="inline-flex items-center gap-2 bg-green-600 text-white
+                     px-4 py-2 rounded-lg hover:bg-green-700 transition"
         >
           📄 Subir un PDF
         </button>
         <button
-            onClick={() => navigate("/biblioteca")}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          ></button>
+          onClick={() => navigate('/biblioteca')}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg
+                     hover:bg-blue-700 transition"
+        >
+          Biblioteca
+        </button>
       </div>
+    </CardGlass>
+  </div>
+);
 
-    </section>
-  );
 }
 
 

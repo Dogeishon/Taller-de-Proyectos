@@ -7,6 +7,7 @@ import { doc, getDoc, increment, updateDoc, getFirestore } from "firebase/firest
 import { useNavigate, Link } from "react-router-dom";
 import AuthCard from "./AuthCard";               // ⬅️ contenedor visual
 
+
 export default function Login() {
   const [correo,    setCorreo]    = useState("");
   const [password,  setPassword]  = useState("");

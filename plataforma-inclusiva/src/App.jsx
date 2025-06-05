@@ -5,7 +5,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 
 /* ---------- layouts / páginas ---------- */
-import Layout           from "./layouts/Layout";
+import Layout from "./layouts/Layout";           
 import LandingPage      from "./components/LandingPage";
 import Login            from "./components/Login";
 import Registro         from "./components/registro";
@@ -35,13 +35,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route element={<PrivateRoute element={<Layout />} />}>
         {/* públicas */}
-        <Route path="/"          element={<LandingPage />} />
-        <Route path="/login"     element={<Login />} />
-        <Route path="/registro"  element={<Registro />} />
+          <Route path="/"          element={<LandingPage />} />
+          <Route path="/login"     element={<Login />} />
+          <Route path="/registro"  element={<Registro />} />
 
         {/* privadas dentro del layout común */}
-        <Route element={<PrivateRoute element={<Layout />} />}>
+        
           <Route path="/EstiloAprendizaje" element={<EstiloTest />} />
           <Route path="/chatbot"           element={<Chatbot />} />
           <Route path="/upload-pdf"        element={<UploadPDF />} />

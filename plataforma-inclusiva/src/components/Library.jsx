@@ -11,6 +11,7 @@ import {
   getFirestore,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import PdfCard from "./PdfCard";
 
 export default function Library() {
   const [user, setUser] = useState(null);
@@ -75,38 +76,11 @@ export default function Library() {
         </p>
       )}
 
-      <ul className="space-y-4">
-        {docs.map((docItem) => (
-          <li
-            key={docItem.id}
-            className="border rounded-lg p-4 hover:shadow-lg transition"
-          >
-            <a
-              href={docItem.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline font-medium"
-            >
-              {docItem.name}.pdf
-            </a>
-
-            <div className="mt-1 text-sm text-gray-700">
-              <span className="inline-block bg-gray-200 text-gray-800 px-2 py-1 rounded mr-2">
-                Nivel: {docItem.nivel}
-              </span>
-              <span className="inline-block bg-gray-200 text-gray-800 px-2 py-1 rounded">
-                Estilo: {docItem.tipoAprendizaje}
-              </span>
-            </div>
-
-            {docItem.timestamp && (
-              <p className="mt-1 text-xs text-gray-500">
-                Subido el {new Date(docItem.timestamp).toLocaleString()}
-              </p>
-            )}
-          </li>
+      <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {docs.map((docItem) => (
+         <PdfCard key={docItem.id} pdf={docItem} />
         ))}
-      </ul>
+      </section>
     </div>
   );
 }
