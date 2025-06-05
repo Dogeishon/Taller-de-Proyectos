@@ -53,3 +53,18 @@ data/
 # Otros
 .DS_Store
 
+.venv
+.rasa
+
+node_modules/
+
+dist/
+build/
+
+temp-repo.git/
+
+*.env
+
+# logs, caché, sistema
+npm-debug.log*
+.DS_Store
