@@ -17,7 +17,7 @@ export default function Layout() {
         </h1>
       </header>
 
-      <main className="flex-1 flex justify-center p-4">
+      <main className="flex-1 flex justify-center items-start p-4">
         <div className="w-full max-w-4xl space-y-8">
           <Outlet />
         </div>

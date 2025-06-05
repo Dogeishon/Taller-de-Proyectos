@@ -3,10 +3,6 @@
 @tailwind utilities;
 
 body {
-  /* fondo fijo, centrado y cubriendo */
-  background: url('/gato-libro.webp') center/cover fixed no-repeat;
-
-  /* opcional: un leve tinte oscuro para asegurar contraste */
-   background-color: rgba(0, 0, 0, 0.3); 
-   background-blend-mode: overlay; 
+  @apply bg-gato-libro bg-cover bg-center min-h-screen;
 }
+

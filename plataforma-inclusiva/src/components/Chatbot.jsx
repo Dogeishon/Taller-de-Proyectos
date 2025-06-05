@@ -5,10 +5,12 @@ import { addDoc, collection, serverTimestamp, doc, getDoc, updateDoc, increment 
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebaseConfig";          // ← ajusta si tu ruta es distinta
 import VoiceInput from "./VoiceInput";           // ← ajusta si está en otra carpeta
+import { useNavigate } from "react-router-dom";
 
 const neon = "#39FF14";
 const topics = ["algebra","matrices","probabilidad" /* …otros temas… */];
 const CONTENT_THRESHOLD = 5;
+
 
 export default function Chatbot() {
   /* -------------------- estados -------------------- */
@@ -17,6 +19,7 @@ export default function Chatbot() {
   const [uid,      setUid]      = useState(null);
   const [style,    setStyle]    = useState("visual");
   const bottomRef              = useRef(null);
+  const navigate = useNavigate();
 
   /* ---------------- usuario y estilo ---------------- */
   useEffect(() => {
@@ -121,7 +124,7 @@ export default function Chatbot() {
 
   /* ---------------- render ------------------------ */
   return (
-    <section className="flex flex-col gap-4">
+     <section className="w-full max-w-xl mx-auto flex flex-col gap-4">
       {/* historial */}
       <div className="h-[60vh] overflow-y-auto space-y-3 p-4
                 bg-crema/90 backdrop-blur-sm rounded-xl shadow-inner">
@@ -177,6 +180,20 @@ export default function Chatbot() {
 
       {/* entrada voz */}
       {style !== "visual" && <VoiceInput onSubmit={handleVoiceSend} />}
+
+      <div className="mt-4 text-center">
+        <button
+          onClick={() => navigate("/upload-pdf")}
+          className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+        >
+          📄 Subir un PDF
+        </button>
+        <button
+            onClick={() => navigate("/biblioteca")}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          ></button>
+      </div>
+
     </section>
   );
 }

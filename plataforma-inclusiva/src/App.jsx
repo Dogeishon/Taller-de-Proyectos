@@ -1,16 +1,20 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-import Layout          from "./layouts/Layout";
-import LandingPage     from "./components/LandingPage";
-import Login           from "./components/Login";
-import Registro        from "./components/registro";
-import EstiloTest      from "./components/EstiloAprendizaje";
-import Chatbot         from "./components/Chatbot";
 
-/* ---- envoltorio para rutas protegidas ---- */
+/* ---------- layouts / páginas ---------- */
+import Layout           from "./layouts/Layout";
+import LandingPage      from "./components/LandingPage";
+import Login            from "./components/Login";
+import Registro         from "./components/registro";
+import EstiloTest       from "./components/EstiloAprendizaje";
+import Chatbot          from "./components/Chatbot";
+import UploadPDF        from "./components/UploadPDF";
+import Library          from "./components/Library";
+
+/* ---------- wrapper para rutas privadas ---------- */
 function PrivateRoute({ element }) {
   const [loading, setLoading] = useState(true);
   const [authed,  setAuthed]  = useState(false);
@@ -23,30 +27,25 @@ function PrivateRoute({ element }) {
     return unsub;
   }, []);
 
-  if (loading) return null;                  // puedes poner un spinner
-  return authed ? element : <Navigate to="/" replace />;
+  if (loading) return null;           // puedes colocar un spinner aquí
+  return authed ? element : <Navigate to="/login" replace />;
 }
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* públicas */}
+        <Route path="/"          element={<LandingPage />} />
+        <Route path="/login"     element={<Login />} />
+        <Route path="/registro"  element={<Registro />} />
 
-        <Route path="/" element={<LandingPage />} />
-        {/* 1. Login en la raíz */}
-        <Route path="/login"    element={<Login />} />
-
-        {/* 2. Registro */}
-        <Route path="/registro" element={<Registro />} />
-
-        {/* 3-4. Rutas protegidas (dentro del Layout) */}
-        <Route
-          element={
-            <PrivateRoute element={<Layout />} />   // header + fondo
-          }
-        >
-          <Route path="/EstiloAprendizaje"    element={<EstiloTest />} />
-          <Route path="/chatbot" element={<Chatbot />} />
+        {/* privadas dentro del layout común */}
+        <Route element={<PrivateRoute element={<Layout />} />}>
+          <Route path="/EstiloAprendizaje" element={<EstiloTest />} />
+          <Route path="/chatbot"           element={<Chatbot />} />
+          <Route path="/upload-pdf"        element={<UploadPDF />} />
+          <Route path="/biblioteca"        element={<Library />} />
         </Route>
 
         {/* fallback */}
