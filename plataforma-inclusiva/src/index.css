@@ -2,11 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 @import "@fontsource/inter/latin.css";
+
 body {
   @apply bg-gato-libro bg-cover bg-center min-h-screen;
+  padding-bottom: 4.5rem; /* espacio para la barra fija */
 }
 
-.icon-btn{
+.icon-btn {
   @apply p-2 rounded-full bg-white/20 backdrop-blur
          hover:bg-white/40 transition;
 }

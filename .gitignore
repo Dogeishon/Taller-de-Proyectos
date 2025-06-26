@@ -67,4 +67,7 @@ temp-repo.git/
 
 # logs, caché, sistema
 npm-debug.log*
-.DS_Store
+.
+
+# .gitignore
+/plataforma-inclusiva/public/model/*

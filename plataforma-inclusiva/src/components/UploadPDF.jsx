@@ -1,5 +1,3 @@
-// src/components/UploadPDF.jsx
-
 import { useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
@@ -7,37 +5,42 @@ import { db } from "../firebaseConfig";
 import { supabase } from "../utils/supabaseClient";
 import { useNavigate } from "react-router-dom";
 
-// ──── Función para eliminar acentos y caracteres inválidos ────
+/* ─── lista de temas reconocidos por el modelo ─── */
+const TOPICS = [
+  "algebra", "geometry", "calculus", "physics",
+  "history", "literature", "biology", "chemistry",
+  "english", "programming"
+];
+
+/* eliminar tildes y símbolos */
 function sanitizeName(str) {
   return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^A-Za-z0-9]/g, "_");
 }
 
 export default function UploadPDF() {
+  /* --------------- estado --------------- */
   const [user, setUser] = useState(null);
-  const [nivel, setNivel] = useState("Básico");
-  const [displayName, setDisplayName] = useState("");
-  const [tipoAprendizaje, setTipoAprendizaje] = useState("visual");
-  const [file, setFile] = useState(null);
+
+  const [nivel, setNivel]                 = useState("Básico");
+  const [displayName, setDisplayName]     = useState("");
+  const [tipoAprendizaje, setTipo]        = useState("visual");
+  const [topic, setTopic]                 = useState("algebra");
+  const [file,  setFile]                  = useState(null);
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error,   setError]   = useState("");
   const navigate = useNavigate();
 
-  // Detectar usuario autenticado
+  /* detectar usuario logueado */
   useEffect(() => {
-    const auth = getAuth();
-    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-    });
-    return () => unsubscribeAuth();
+    const unsub = onAuthStateChanged(getAuth(), setUser);
+    return () => unsub();
   }, []);
 
-  // Si no está logueado, mostramos mensaje
   if (!user) {
     return (
-      
       <div className="h-screen flex flex-col items-center justify-center bg-crema/90 backdrop-blur-sm">
         <p className="text-xl text-red-600 mb-4">
           Debes iniciar sesión para subir archivos.
@@ -52,12 +55,11 @@ export default function UploadPDF() {
     );
   }
 
-  // Manejar el submit
-  const handleSubmit = async (e) => {
+  /* --------------- submit --------------- */
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
-    // Validaciones
     if (!displayName.trim()) {
       setError("El nombre del archivo es obligatorio.");
       return;
@@ -74,75 +76,77 @@ export default function UploadPDF() {
     setLoading(true);
     try {
       const timestamp = Date.now();
+      const safeName  = sanitizeName(displayName);
+      const filePath  = `${user.uid}/${safeName}_${timestamp}.pdf`;
 
-      // ────── Sanitizar “displayName” antes de usarlo en la key ──────
-      const safeName = sanitizeName(displayName);
-      const filePath = `${user.uid}/${safeName}_${timestamp}.pdf`;
-
-      // Subir a Supabase Storage (bucket “pdfs”)
+      /* subir a Supabase Storage */
       const { error: uploadError } = await supabase
-        .storage
-        .from("pdfs")
+        .storage.from("pdfs")
         .upload(filePath, file, { upsert: false });
 
       if (uploadError) throw new Error(uploadError.message);
 
-      // Obtener URL pública
-      const {
-        data: { publicUrl },
-      } = supabase
-        .storage
-        .from("pdfs")
+      /* obtener URL pública */
+      const { data: { publicUrl } } = supabase
+        .storage.from("pdfs")
         .getPublicUrl(filePath);
 
-      // Guardar metadatos en Firestore
+      /* mapear nivel → difficulty numérico */
+      const nivelMap     = { Básico: 1, Intermedio: 3, Avanzado: 5 };
+      const difficulty   = nivelMap[nivel] ?? 3;
+
+      /* guardar metadatos */
       const docRef = doc(db, "biblioteca", `${user.uid}_${timestamp}`);
       await setDoc(docRef, {
         uid: user.uid,
-        nivel,
+        difficulty,            // numérico
+        style_tag: tipoAprendizaje,
+        topic,
         name: safeName,
-        tipoAprendizaje,
         url: publicUrl,
-        timestamp,
+        timestamp
       });
 
       alert("PDF subido correctamente.");
-      // Limpiar formulario
+
+      /* reset */
       setNivel("Básico");
       setDisplayName("");
-      setTipoAprendizaje("visual");
+      setTipo("visual");
+      setTopic("algebra");
       setFile(null);
     } catch (err) {
-      console.error("Error al subir PDF:", err);
+      console.error(err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
+  /* --------------- UI --------------- */
   return (
     <div className="h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md bg-white rounded-lg shadow p-6 space-y-6">
         <h1 className="text-2xl font-bold text-center">Subir PDF</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Campo “Nivel” */}
+          {/* Nivel */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Nivel
             </label>
             <select
               value={nivel}
-              onChange={(e) => setNivel(e.target.value)}
+              onChange={e => setNivel(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="Básico">Básico</option>
-              <option value="Intermedio">Intermedio</option>
-              <option value="Avanzado">Avanzado</option>
+              <option>Básico</option>
+              <option>Intermedio</option>
+              <option>Avanzado</option>
             </select>
           </div>
 
-          {/* Campo “Nombre del archivo” */}
+          {/* Nombre del archivo */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Nombre del archivo
@@ -150,20 +154,20 @@ export default function UploadPDF() {
             <input
               type="text"
               value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              onChange={e => setDisplayName(e.target.value)}
               placeholder="Ej: Algebra_basico"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          {/* Campo “Tipo de aprendizaje” */}
+          {/* Tipo de aprendizaje */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Tipo de aprendizaje
             </label>
             <select
               value={tipoAprendizaje}
-              onChange={(e) => setTipoAprendizaje(e.target.value)}
+              onChange={e => setTipo(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="visual">Visual</option>
@@ -172,7 +176,25 @@ export default function UploadPDF() {
             </select>
           </div>
 
-          {/* Campo “Seleccionar PDF” */}
+          {/* Tema */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Tema
+            </label>
+            <select
+              value={topic}
+              onChange={e => setTopic(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 bg-white shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            >
+              {TOPICS.map(t => (
+                <option key={t} value={t}>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Seleccionar PDF */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Seleccionar PDF
@@ -180,7 +202,7 @@ export default function UploadPDF() {
             <input
               type="file"
               accept="application/pdf"
-              onChange={(e) => setFile(e.target.files[0])}
+              onChange={e => setFile(e.target.files[0])}
               className="mt-1 block w-full text-gray-700"
             />
             {file && (
@@ -192,7 +214,7 @@ export default function UploadPDF() {
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
-          {/* Botón de “Subir PDF” (verde, visible) */}
+          {/* Botón */}
           <button
             type="submit"
             disabled={loading}
@@ -202,7 +224,6 @@ export default function UploadPDF() {
                 : "bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300"
             }`}
           >
-            
             {loading ? "Subiendo…" : "Subir PDF"}
           </button>
         </form>
@@ -210,4 +231,3 @@ export default function UploadPDF() {
     </div>
   );
 }
-

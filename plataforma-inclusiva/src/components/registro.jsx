@@ -28,6 +28,7 @@ export default function Registro() {
         nombre,
         correo,
         nivelDiscapacidad,
+        num_logins: 0,
         estiloAprendizaje: null,
         estiloTestCompletado: false,
         fechaRegistro: new Date(),

@@ -1,6 +1,7 @@
 // src/components/Login.jsx
 import { useState } from "react";
 import { signInWithEmailAndPassword, getAuth } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebaseConfig";
 import { doc, getDoc, increment, updateDoc, getFirestore } from "firebase/firestore";
